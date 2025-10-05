@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const cors = require("cors");
+const serverless = require("serverless-http"); // wrap Express for Vercel
 
 const app = express();
 app.use(cors());
@@ -9,10 +10,12 @@ app.use(express.json({ limit: "20mb" }));
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
+// Simulated manual fetch
 function fetchManual(brand, product, model) {
   return { brand, product, model, manualUrl: `https://example.com/manuals/${brand}_${product}_${model}.pdf` };
 }
 
+// Routes
 app.post("/api/upload", upload.single("photo"), (req, res) => {
   if (!req.file) return res.status(400).json({ message: "No file uploaded" });
   res.json({ message: "Photo analysed successfully!", manual: fetchManual("Sony","TV","Bravia-X90J") });
@@ -29,5 +32,6 @@ app.post("/api/camera", upload.single("photo"), (req, res) => {
   res.json({ message: "Camera photo analysed!", manual: fetchManual("Apple","iPhone","14 Pro") });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Export the Express app as a Vercel serverless function
+module.exports = app;
+module.exports.handler = serverless(app);
