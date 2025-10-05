@@ -18,19 +18,19 @@ function fetchManual(brand, product, model) {
 handler.use(upload.single("photo"));
 
 handler.post((req, res) => {
-  if (!req.file) return res.status(400).json({ message: "No file uploaded" });
+  if (!req.file) return res.status(400).json({ message: "No camera photo uploaded" });
 
-  const brand = "Sony";
-  const product = "TV";
-  const model = "Bravia-X90J";
+  const brand = "Apple";
+  const product = "iPhone";
+  const model = "14 Pro";
   const manual = fetchManual(brand, product, model);
 
-  res.json({ message: "Photo analysed successfully!", manual });
+  res.json({ message: "Camera photo analysed!", manual });
 });
 
 export const config = {
   api: {
-    bodyParser: false, // Disables default body parser for multer
+    bodyParser: false,
   },
 };
 
