@@ -1,9 +1,9 @@
 import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import LandingPage from "./LandingPage";
-import CameraCapture from "./CameraCapture";
-import UploadPhoto from "./UploadPhoto";
-import ManualInput from "./ManualInput";
+import LandingPage from './pages/LandingPage';
+import CameraCapture from './components/CameraCapture';
+import UploadPhoto from './components/UploadPhoto';
+import ManualInput from './components/ManualInput';
 
 function App() {
   return (
