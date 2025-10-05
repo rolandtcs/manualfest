@@ -7,14 +7,12 @@ import ManualInput from './components/ManualInput';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/camera" element={<CameraCapture onCaptureBack={() => window.history.back()} />} />
-        <Route path="/upload" element={<UploadPhoto />} />
-        <Route path="/manual" element={<ManualInput />} />
-      </Routes>
-    </BrowserRouter>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/camera" element={<CameraCapture onCaptureBack={() => window.history.back()} />} />
+      <Route path="/upload" element={<UploadPhoto />} />
+      <Route path="/manual" element={<ManualInput />} />
+    </Routes>
   );
 }
 
