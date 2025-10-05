@@ -64,7 +64,7 @@ export default function CameraCapture({ onCaptureBack }) {
       const formData = new FormData();
       formData.append("photo", blob, "capture.png");
 
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await fetch(`${process.env.REACT_APP_API_URL}/camera`, { method: "POST", body: formData });
       const data = await res.json();
       alert(data.manual ? `✅ Found manual: ${data.manual.manualUrl}` : data.message);
     } catch {
