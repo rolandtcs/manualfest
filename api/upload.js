@@ -1,37 +1,24 @@
-import multer from "multer";
 import nextConnect from "next-connect";
+import multer from "multer";
+import { fetchManual } from "./helpers";
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
 const handler = nextConnect();
-
-function fetchManual(brand, product, model) {
-  return {
-    brand,
-    product,
-    model,
-    manualUrl: `https://example.com/manuals/${brand}_${product}_${model}.pdf`,
-  };
-}
 
 handler.use(upload.single("photo"));
 
 handler.post((req, res) => {
   if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-  const brand = "Sony";
-  const product = "TV";
-  const model = "Bravia-X90J";
-  const manual = fetchManual(brand, product, model);
+  // TODO: integrate AI/ML model later
+  const manual = fetchManual("Sony", "TV", "Bravia-X90J");
 
   res.json({ message: "Photo analysed successfully!", manual });
 });
 
 export const config = {
-  api: {
-    bodyParser: false, // Disables default body parser for multer
-  },
+  api: { bodyParser: false },
 };
 
 export default handler;
