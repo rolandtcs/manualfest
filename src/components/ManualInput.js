@@ -3,6 +3,9 @@ import { useNavigate } from "react-router-dom";
 import PageWrapper from "../components/PageWrapper";
 import NeumorphicButton from "../components/NeumorphicButton";
 
+// Fixed API URL - works in both dev and production
+const API_URL = process.env.REACT_APP_API_URL || '/api';
+
 export default function ManualInput() {
   const navigate = useNavigate();
   const [brand, setBrand] = useState("");
@@ -18,24 +21,29 @@ export default function ManualInput() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/manual-input`, {
+      // Fixed API call
+      const res = await fetch(`${API_URL}/manual-input`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand, product, model }),
       });
+      
       const data = await res.json();
+      
       if (data.manual) {
         alert(
           `✅ Manual Found!\nBrand: ${data.manual.brand}\nProduct: ${data.manual.product}\nModel: ${data.manual.model}\nURL: ${data.manual.manualUrl}`
         );
       } else {
-        alert(data.message);
+        alert(data.message || "Failed to process manual input");
       }
+      
       setBrand("");
       setProduct("");
       setModel("");
-    } catch {
-      alert("Failed to send manual input.");
+    } catch (error) {
+      console.error("Manual input error:", error);
+      alert("Failed to send manual input. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -52,7 +60,6 @@ export default function ManualInput() {
         Fill in what you know about your device
       </p>
 
-      {/* Form Fields */}
       <div style={{ display: "flex", flexDirection: "column", gap: "16px", width: "100%" }}>
         <div>
           <label style={{ display: "block", fontSize: "16px", fontWeight: "600", marginBottom: "6px" }}>
@@ -100,7 +107,6 @@ export default function ManualInput() {
         </div>
       </div>
 
-      {/* Buttons */}
       <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginTop: "16px", width: "100%" }}>
         <NeumorphicButton onClick={handleSubmit} disabled={!isFormValid || loading}>
           {loading ? "⏳ Submitting..." : "✅ Submit"}

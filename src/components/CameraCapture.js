@@ -2,6 +2,9 @@ import React, { useRef, useState, useEffect, useCallback } from "react";
 import NeumorphicButton from "../components/NeumorphicButton";
 import PageWrapper from "../components/PageWrapper";
 
+// Fixed API URL - works in both dev and production
+const API_URL = process.env.REACT_APP_API_URL || '/api';
+
 export default function CameraCapture({ onCaptureBack }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
@@ -66,14 +69,21 @@ export default function CameraCapture({ onCaptureBack }) {
       const formData = new FormData();
       formData.append("photo", blob, "capture.png");
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/camera`, { method: "POST", body: formData });
+      // Fixed API call
+      const res = await fetch(`${API_URL}/camera`, { 
+        method: "POST", 
+        body: formData 
+      });
+      
       const data = await res.json();
+      
       if (data.manual) {
         alert(`✅ Manual Found!\nBrand: ${data.manual.brand}\nProduct: ${data.manual.product}\nModel: ${data.manual.model}\nURL: ${data.manual.manualUrl}`);
       } else {
-        alert(data.message);
+        alert(data.message || "Failed to process photo");
       }
-    } catch {
+    } catch (error) {
+      console.error("Camera upload error:", error);
       alert("Failed to send photo to backend");
     } finally {
       setLoading(false);
