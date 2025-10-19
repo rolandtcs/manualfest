@@ -1,73 +1,97 @@
 const formidable = require('formidable');
 const Tesseract = require('tesseract.js');
-const OpenAI = require('openai');
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
-
+// Simple manual fetch function
 function fetchManual(brand, product, model) {
   return {
-    brand,
-    product,
-    model,
+    brand: brand || "Unknown",
+    product: product || "Unknown",
+    model: model || "Unknown",
     manualUrl: `https://example.com/manuals/${brand}_${product}_${model}.pdf`
   };
 }
 
-async function parseProductInfo(text) {
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{
-        role: "user",
-        content: `Extract brand, product type, and model from this text. Return ONLY as: brand,product,model\n\n${text}`
-      }]
-    });
-
-    const output = response.choices[0].message.content.trim();
-    const [brand, product, model] = output.split(",").map(x => x.trim());
-    return { brand, product, model };
-  } catch (err) {
-    console.error("Error:", err);
-    return null;
-  }
+// Parse text to extract product info (simple version without OpenAI)
+function parseProductInfoSimple(text) {
+  // Simple keyword matching (we'll improve this later)
+  const lines = text.split('\n').filter(line => line.trim().length > 0);
+  
+  // Return first 3 lines as brand, product, model
+  return {
+    brand: lines[0] || "Unknown Brand",
+    product: lines[1] || "Unknown Product",
+    model: lines[2] || "Unknown Model"
+  };
 }
 
 export default async function handler(req, res) {
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const form = formidable({ maxFileSize: 10 * 1024 * 1024 });
+  try {
+    const form = formidable({ 
+      maxFileSize: 10 * 1024 * 1024,
+      keepExtensions: true 
+    });
 
-  form.parse(req, async (err, fields, files) => {
-    if (err) {
-      return res.status(500).json({ message: "Error parsing file" });
-    }
+    form.parse(req, async (err, fields, files) => {
+      if (err) {
+        console.error('Form parse error:', err);
+        return res.status(500).json({ 
+          message: "Error parsing file",
+          error: err.message 
+        });
+      }
 
-    const file = files.photo;
-    if (!file) {
-      return res.status(400).json({ message: "No file uploaded" });
-    }
+      const file = files.photo;
+      if (!file || !file[0]) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
 
-    try {
-      const { data: { text } } = await Tesseract.recognize(file[0].filepath, "eng");
-      const info = await parseProductInfo(text);
+      try {
+        // Use Tesseract to extract text
+        const { data: { text } } = await Tesseract.recognize(file[0].filepath, 'eng');
+        
+        // Parse the text
+        const info = parseProductInfoSimple(text);
+        
+        // Fetch manual
+        const manual = fetchManual(info.brand, info.product, info.model);
 
-      const manual = info
-        ? fetchManual(info.brand, info.product, info.model)
-        : fetchManual("Sony", "TV", "Bravia-X90J");
-
-      res.json({ message: "Photo analysed successfully!", manual });
-    } catch (error) {
-      console.error(error);
-      res.json({
-        message: "Failed to analyse photo",
-        manual: fetchManual("Sony", "TV", "Bravia-X90J")
-      });
-    }
-  });
+        return res.status(200).json({ 
+          message: "Photo analysed successfully!", 
+          manual,
+          extractedText: text.substring(0, 200) // First 200 chars for debugging
+        });
+        
+      } catch (ocrError) {
+        console.error('OCR Error:', ocrError);
+        
+        // Return fallback manual
+        return res.status(200).json({
+          message: "Could not read text from image",
+          manual: fetchManual("Sony", "TV", "Bravia-X90J")
+        });
+      }
+    });
+    
+  } catch (error) {
+    console.error('Handler error:', error);
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message
+    });
+  }
 }
 
 export const config = {
