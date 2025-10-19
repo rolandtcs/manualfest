@@ -1,4 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
+import NeumorphicButton from "../components/NeumorphicButton";
+import PageWrapper from "../components/PageWrapper";
 
 export default function CameraCapture({ onCaptureBack }) {
   const videoRef = useRef(null);
@@ -66,7 +68,11 @@ export default function CameraCapture({ onCaptureBack }) {
 
       const res = await fetch(`${process.env.REACT_APP_API_URL}/camera`, { method: "POST", body: formData });
       const data = await res.json();
-      alert(data.manual ? `✅ Found manual: ${data.manual.manualUrl}` : data.message);
+      if (data.manual) {
+        alert(`✅ Manual Found!\nBrand: ${data.manual.brand}\nProduct: ${data.manual.product}\nModel: ${data.manual.model}\nURL: ${data.manual.manualUrl}`);
+      } else {
+        alert(data.message);
+      }
     } catch {
       alert("Failed to send photo to backend");
     } finally {
@@ -74,114 +80,50 @@ export default function CameraCapture({ onCaptureBack }) {
     }
   };
 
-// ---------- Styles ----------
-  // Card & container
-const containerStyle = {
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  padding: "20px",
-  minHeight: "100vh",
-  backgroundColor: "#f9fafb",
-};
-const cardStyle = {
-  width: "100%",
-  maxWidth: "400px",
-  backgroundColor: "#fff",
-  borderRadius: "16px",
-  padding: "24px",
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-  alignItems: "center",
-};
-
-  // Headers
-  const headerStyle = { fontSize: "24px", fontWeight: "600", textAlign: "center", margin: 0 };
-  const subTextStyle = { fontSize: "14px", color: "#6b7280", textAlign: "center", margin: 0 };
-
-  // Buttons
-  const btnPrimary = { 
-  width: "100%", padding: "16px", borderRadius: "16px", fontSize: "16px", fontWeight: "600",
-  backgroundColor: "#3b82f6", color: "#fff", cursor: "pointer", border: "none",
-  transition: "background-color 0.2s ease",
-};
-  const btnPrimaryDisabled = { ...btnPrimary, backgroundColor: "#93c5fd", cursor: "not-allowed" };
-  const btnSecondary = { 
-  width: "100%", padding: "12px", borderRadius: "16px", fontSize: "16px",
-  backgroundColor: "#e5e7eb", color: "#374151", cursor: "pointer", border: "none",
-  transition: "background-color 0.2s ease",
-};
-
-  // Others
-  const videoStyle = { width: "100%", borderRadius: "16px", backgroundColor: "#000" };
-  const imgStyle = { width: "100%", borderRadius: "16px" };
-  const errorTextStyle = { color: "red", textAlign: "center", marginBottom: "10px" };
-
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h2 style={headerStyle}>Scan Your Device</h2>
-        <p style={subTextStyle}>Point at product labels or model numbers</p>
+    <PageWrapper contentHeight="500px">
+      <h2 style={{ fontSize: "clamp(24px, 5vw, 28px)", fontWeight: "700", textAlign: "center", margin: 0 }}>
+        Scan Your Device
+      </h2>
+      <p style={{ fontSize: "14px", color: "#475569", textAlign: "center", margin: "4px 0 16px" }}>
+        Point at product labels or model numbers
+      </p>
 
-        {!capturedPhoto ? (
-          <>
-            {error ? (
-              <>
-                <p style={errorTextStyle}>{error}</p>
-                <button style={btnPrimary} onClick={startCamera}>🔄 Retry</button>
-                <button style={btnSecondary} onClick={onCaptureBack}>🔙 Back</button>
-              </>
-            ) : (
-              <>
-                <video ref={videoRef} style={videoStyle} autoPlay playsInline />
-                <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
-                  <button
-                    style={btnPrimary}
-                    onClick={takePhoto}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#2563eb"}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#3b82f6"}
-                    >
-                      📸 Take Photo</button>
-                  <button
-                    style={btnSecondary}
-                    onClick={onCaptureBack}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#d1d5db"}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#e5e7eb"}
-                    >
-                      🔙 Back
-                    </button>
-                </div>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            <h3>Preview</h3>
-            <img src={capturedPhoto} alt="Captured" style={imgStyle} />
-            <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "12px" }}>
-              <button
-                style={btnPrimary}
-                onClick={() => sendPhotoToBackend(capturedPhoto)}
-                disabled={loading}
-                onMouseOver={(e) => { if(!loading) e.currentTarget.style.backgroundColor = "#2563eb"}}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#3b82f6"}
-                >
-                {loading ? "⏳ Sending..." : "✅ Confirm"}
-              </button>
-              <button
-                style={btnSecondary}
-                onClick={() => setCapturedPhoto(null)}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#d1d5db"}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#e5e7eb"}
-              >
-                🔄 Retake
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+      {!capturedPhoto ? (
+        <>
+          {error ? (
+            <>
+              <p style={{ color: "red", textAlign: "center", marginBottom: "12px" }}>{error}</p>
+              <NeumorphicButton onClick={startCamera}>🔄 Retry</NeumorphicButton>
+              <NeumorphicButton onClick={onCaptureBack}>🔙 Back</NeumorphicButton>
+            </>
+          ) : (
+            <>
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                style={{ width: "100%", borderRadius: "16px", backgroundColor: "#000", height: "200px" }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+                <NeumorphicButton onClick={takePhoto}>📸 Take Photo</NeumorphicButton>
+                <NeumorphicButton onClick={onCaptureBack}>🔙 Back</NeumorphicButton>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <h3 style={{ fontSize: "20px", fontWeight: "600", margin: "12px 0 8px", textAlign: "center" }}>Preview</h3>
+          <img src={capturedPhoto} alt="Captured" style={{ width: "100%", borderRadius: "16px" }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: "12px", width: "100%" }}>
+            <NeumorphicButton onClick={() => sendPhotoToBackend(capturedPhoto)} disabled={loading}>
+              {loading ? "⏳ Sending..." : "✅ Confirm"}
+            </NeumorphicButton>
+            <NeumorphicButton onClick={() => setCapturedPhoto(null)}>🔄 Retake</NeumorphicButton>
+          </div>
+        </>
+      )}
+    </PageWrapper>
   );
 }
